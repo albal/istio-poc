@@ -2,7 +2,6 @@
 # install-k3d.sh – Install k3d and kubectl (if not already present)
 set -euo pipefail
 
-K3D_VERSION="${K3D_VERSION:-v5.7.4}"
 KUBECTL_VERSION="${KUBECTL_VERSION:-$(curl -sSL https://dl.k8s.io/release/stable.txt)}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
@@ -12,9 +11,9 @@ log() { echo "[$(date '+%H:%M:%S')] $*"; }
 if command -v k3d &>/dev/null; then
   log "k3d already installed: $(k3d version | head -1)"
 else
-  log "Installing k3d ${K3D_VERSION} …"
-  curl -sSL "https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh" \
-    | TAG="${K3D_VERSION}" bash
+  log "Installing latest k3d release …"
+  # Omitting TAG causes the install script to resolve the latest GitHub release
+  curl -sSL "https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh" | bash
   log "k3d installed: $(k3d version | head -1)"
 fi
 
