@@ -1,0 +1,116 @@
+# IstioOperator configuration for a 32GB RAM host running K3D
+# Provides a production-like setup with generous resource allocations,
+# multiple replicas, and the full observability stack.
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-poc
+  namespace: istio-system
+spec:
+  # Use the "default" profile (istiod + ingress gateway)
+  profile: default
+
+  # Global mesh settings
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+    defaultConfig:
+      # Generous proxy concurrency for the 32GB host
+      concurrency: 4
+      tracing:
+        sampling: 100.0   # 100% sampling for PoC/dev
+
+  # Component overrides
+  components:
+    # ── Pilot (istiod) ─────────────────────────────────────────────────────
+    pilot:
+      k8s:
+        replicaCount: 2
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: "2"
+            memory: 2Gi
+        hpaSpec:
+          minReplicas: 2
+          maxReplicas: 5
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 80
+
+    # ── Ingress gateway ────────────────────────────────────────────────────
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          replicaCount: 2
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          hpaSpec:
+            minReplicas: 2
+            maxReplicas: 5
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 80
+          service:
+            type: LoadBalancer
+            ports:
+              - name: status-port
+                port: 15021
+                targetPort: 15021
+              - name: http2
+                port: 80
+                targetPort: 8080
+              - name: https
+                port: 443
+                targetPort: 8443
+
+  # Values for the underlying Helm charts
+  values:
+    global:
+      # Proxy (Envoy sidecar) resource defaults
+      proxy:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: "2"
+            memory: 1Gi
+        # Number of worker threads in each sidecar (scaled for 32GB host CPUs)
+        concurrency: 4
+
+      # Proxy init container (iptables configuration)
+      proxy_init:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+
+    # Pilot (istiod)
+    pilot:
+      autoscaleEnabled: true
+      traceSampling: 100.0
+
+    # Ingress gateway
+    gateways:
+      istio-ingressgateway:
+        autoscaleEnabled: true

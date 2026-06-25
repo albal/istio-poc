@@ -1,0 +1,58 @@
+# K3D cluster configuration for a 32GB RAM host
+# Creates 1 server + 3 agent nodes with Istio-compatible settings
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: istio-poc
+servers: 1
+agents: 3
+kubeAPI:
+  hostIP: "0.0.0.0"
+  hostPort: "6443"
+image: rancher/k3s:v1.30.4-k3s1
+ports:
+  # Istio ingress gateway HTTP
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  # Istio ingress gateway HTTPS
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+  # Prometheus
+  - port: 9090:9090
+    nodeFilters:
+      - loadbalancer
+  # Grafana
+  - port: 3000:3000
+    nodeFilters:
+      - loadbalancer
+  # Kiali
+  - port: 20001:20001
+    nodeFilters:
+      - loadbalancer
+  # Jaeger
+  - port: 16686:16686
+    nodeFilters:
+      - loadbalancer
+options:
+  k3s:
+    extraArgs:
+      # Disable Traefik (we use Istio ingress instead)
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+      # Disable ServiceLB (we use MetalLB or NodePort via k3d lb)
+      - arg: --disable=servicelb
+        nodeFilters:
+          - server:*
+      # Increase node resource allocation for 32GB RAM host
+      - arg: --kube-apiserver-arg=max-requests-inflight=800
+        nodeFilters:
+          - server:*
+      - arg: --kube-apiserver-arg=max-mutating-requests-inflight=400
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
