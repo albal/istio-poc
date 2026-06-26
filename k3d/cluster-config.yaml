@@ -9,7 +9,7 @@ agents: 3
 kubeAPI:
   hostIP: "0.0.0.0"
   hostPort: "6443"
-image: rancher/k3s:v1.30.4-k3s1
+#image: rancher/k3s:v1.30.4-k3s1
 ports:
   # Istio ingress gateway HTTP
   - port: 80:80
