@@ -15,8 +15,6 @@ spec:
     accessLogFile: /dev/stdout
     enableTracing: true
     defaultConfig:
-      # Generous proxy concurrency for the 32GB host
-      concurrency: 4
       tracing:
         sampling: 100.0   # 100% sampling for PoC/dev
 
