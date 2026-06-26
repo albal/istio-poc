@@ -2,7 +2,7 @@
 # install-istio.sh – Download istioctl and install Istio on the current cluster
 set -euo pipefail
 
-ISTIO_VERSION="${ISTIO_VERSION:-1.22.3}"
+ISTIO_VERSION="${ISTIO_VERSION:-$(curl -sSL https://api.github.com/repos/istio/istio/releases/latest | grep '"tag_name"' | awk -F'"' '{print $4}')}"
 ISTIO_OPERATOR_FILE="${ISTIO_OPERATOR_FILE:-$(dirname "$0")/../istio/istio-operator.yaml}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
