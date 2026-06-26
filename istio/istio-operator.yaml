@@ -90,8 +90,6 @@ spec:
           limits:
             cpu: "2"
             memory: 1Gi
-        # Number of worker threads in each sidecar (scaled for 32GB host CPUs)
-        concurrency: 4
 
       # Proxy init container (iptables configuration)
       proxy_init:
